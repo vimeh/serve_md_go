@@ -48,8 +48,16 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(`<link rel="stylesheet" type="text/css" href="/static/styles.css">`))
+	w.Write([]byte(`<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Markdown Rendered as HTML</title>
+        <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    </head>
+    <body>`))
 	w.Write(sanitizedHTML)
+	w.Write([]byte(`</body>
+    </html>`))
 }
 
 func main() {
