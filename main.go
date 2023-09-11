@@ -2,15 +2,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/gomarkdown/markdown"
-	"github.com/microcosm-cc/bluemonday"
 	"html/template"
 	"io"
 	"net/http"
+	"os"
+
+	"github.com/gomarkdown/markdown"
+	"github.com/microcosm-cc/bluemonday"
 )
 
-// Global variable to hold the sanitized and converted markdown
-var sanitizedHTML []byte
+// Constants for file paths
+const (
+	markdownFilePath = "sanitized.md"
+	htmlFilePath     = "rendered.html"
+)
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
@@ -21,22 +26,35 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		// Read the file
-		content, err := io.ReadAll(file)
+		// Sanitize and save the markdown content
+		p := bluemonday.UGCPolicy()
+		sanitizedMD := p.SanitizeReader(file)
+
+		mdFile, err := os.Create(markdownFilePath)
 		if err != nil {
-			http.Error(w, "Unable to read file", http.StatusInternalServerError)
+			http.Error(w, "Unable to create markdown file", http.StatusInternalServerError)
+			return
+		}
+		defer mdFile.Close()
+		io.Copy(mdFile, sanitizedMD)
+
+		// Convert markdown to HTML and save
+		mdBytes, err := os.ReadFile(markdownFilePath)
+		if err != nil {
+			http.Error(w, "Unable to read markdown file", http.StatusInternalServerError)
 			return
 		}
 
-		// Sanitize the content using Bluemonday
-		p := bluemonday.UGCPolicy()
-		sanitizedMD := p.SanitizeBytes(content)
+		htmlContent := markdown.ToHTML(mdBytes, nil, nil)
 
-		// Convert the Markdown to HTML
-		htmlContent := markdown.ToHTML(sanitizedMD, nil, nil)
+		htmlFile, err := os.Create(htmlFilePath)
+		if err != nil {
+			http.Error(w, "Unable to create HTML file", http.StatusInternalServerError)
+			return
+		}
+		defer htmlFile.Close()
 
-		// Store the sanitized HTML
-		sanitizedHTML = htmlContent
+		io.WriteString(htmlFile, string(htmlContent))
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -48,22 +66,44 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
+	htmlContent, err := os.ReadFile(htmlFilePath)
+	if err != nil {
+		http.Error(w, "Content not available", http.StatusNotFound)
+		return
+	}
+
 	w.Write([]byte(`<!DOCTYPE html>
-    <html>
-    <head>
-        <title>Markdown Rendered as HTML</title>
-        <link rel="stylesheet" type="text/css" href="/static/styles.css">
-    </head>
-    <body>`))
-	w.Write(sanitizedHTML)
+<html>
+<head>
+	<title>Markdown Rendered as HTML</title>
+	<link rel="stylesheet" type="text/css" href="/static/styles.css">
+</head>
+<body>`))
+
+	w.Write(htmlContent)
+
 	w.Write([]byte(`</body>
-    </html>`))
+</html>`))
+}
+
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	mdContent, err := os.ReadFile(markdownFilePath)
+	if err != nil {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Disposition", "attachment; filename=sanitized.md")
+	w.Header().Set("Content-Type", "text/markdown")
+	w.Write(mdContent)
 }
 
 func main() {
 	http.HandleFunc("/edit", uploadHandler)
+	http.HandleFunc("/download", downloadHandler)
 	http.HandleFunc("/", renderHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("."))))
 	fmt.Println("Server started at :8080")
 	http.ListenAndServe(":8080", nil)
 }
+
