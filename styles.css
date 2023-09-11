@@ -2,7 +2,7 @@
 
 /* Global container for content */
 .container {
-  max-width: 600px; /* Set to desired width, 600px is commonly recommended for emails */
+  max-width: 700px; /* Set to desired width, 600px is commonly recommended for emails */
   margin-left: auto;
   margin-right: auto;
   padding: 0px;
@@ -17,9 +17,13 @@ h4,
 h5,
 h6 {
   font-family: monospace;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.6;
   padding: 0px;
+}
+
+h1 {
+  font-size: 32px;
 }
 
 /* Headers */
@@ -34,7 +38,6 @@ h6 {
 
 h1 {
   font-weight: bold;
-  border-bottom: 2px solid #ddd;
 }
 h2 {
   font-weight: bold;
@@ -98,4 +101,3 @@ hr {
   border: 1px solid #ddd;
   margin: 0px 0;
 }
-

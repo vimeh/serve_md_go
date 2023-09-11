@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/microcosm-cc/bluemonday"
@@ -16,6 +18,8 @@ const (
 	markdownFilePath = "sanitized.md"
 	htmlFilePath     = "rendered.html"
 )
+
+var pageTitle string
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
@@ -46,6 +50,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		htmlContent := markdown.ToHTML(mdBytes, nil, nil)
 
+		// Extract first top-level heading as the page title
+		mdLines := strings.Split(string(mdBytes), "\n")
+		for _, line := range mdLines {
+			if strings.HasPrefix(line, "# ") {
+				pageTitle = strings.TrimPrefix(line, "# ")
+				break
+			}
+		}
+
 		htmlFile, err := os.Create(htmlFilePath)
 		if err != nil {
 			http.Error(w, "Unable to create HTML file", http.StatusInternalServerError)
@@ -72,17 +85,19 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(`<!DOCTYPE html>
-<html>
-<head>
-	<title>Markdown Rendered as HTML</title>
-	<link rel="stylesheet" type="text/css" href="/static/styles.css">
-</head>
-<body>`))
+	w.Write([]byte(fmt.Sprintf(`<!DOCTYPE html>
+    <html>
+    <head>
+        <title>%s</title>
+        <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    </head>
+    <body>
+  <div class="container">
+    `, pageTitle)))
 
 	w.Write(htmlContent)
 
-	w.Write([]byte(`</body>
+	w.Write([]byte(`</div></body>
 </html>`))
 }
 
