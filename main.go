@@ -44,7 +44,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Unable to read markdown file", http.StatusInternalServerError)
 			return
 		}
-
 		htmlContent := markdown.ToHTML(mdBytes, nil, nil)
 
 		htmlFile, err := os.Create(htmlFilePath)
