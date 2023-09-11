@@ -48,12 +48,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(`<link rel="stylesheet" type="text/css" href="/static/styles.css">`))
 	w.Write(sanitizedHTML)
 }
 
 func main() {
 	http.HandleFunc("/edit", uploadHandler)
 	http.HandleFunc("/", renderHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("."))))
 	fmt.Println("Server started at :8080")
 	http.ListenAndServe(":8080", nil)
 }
