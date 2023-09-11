@@ -84,20 +84,25 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf(`<!DOCTYPE html>
-    <html>
-    <head>
-        <title>%s</title>
-        <link rel="stylesheet" type="text/css" href="/static/styles.css">
-    </head>
-    <body>
-  <div class="container">
-    `, pageTitle)))
+	w.Write([]byte(fmt.Sprintf(`
+    <!DOCTYPE html>
+      <html>
+      <head>
+          <title>%s</title>
+          <link rel="stylesheet" type="text/css" href="/static/styles.css">
+      </head>
+      <body>
+    <div class="container">`, pageTitle)))
 
 	w.Write(htmlContent)
 
-	w.Write([]byte(`</div></body>
-</html>`))
+	w.Write([]byte(`
+    <footer style="margin-top: 20px;">
+        <a href="/edit">Edit</a>
+    </footer>
+    </div>
+    </body>
+    </html>`))
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
