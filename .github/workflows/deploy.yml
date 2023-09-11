@@ -18,6 +18,6 @@ jobs:
         with:
           switches: -avzr --delete
           remote_path: /root/
-          remote_host: ${{ env.SERVER_IP }}
+          remote_host: ${{ vars.SERVER_IP }}
           remote_user: root
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
