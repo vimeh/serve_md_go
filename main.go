@@ -54,6 +54,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer htmlFile.Close()
 
+		fmt.Println("Writing markdown to HTML file")
 		io.WriteString(htmlFile, string(htmlContent))
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -87,6 +88,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Downloading markdown file")
 	mdContent, err := os.ReadFile(markdownFilePath)
 	if err != nil {
 		http.Error(w, "File not found", http.StatusNotFound)
@@ -106,4 +108,3 @@ func main() {
 	fmt.Println("Server started at :8080")
 	http.ListenAndServe(":8080", nil)
 }
-
